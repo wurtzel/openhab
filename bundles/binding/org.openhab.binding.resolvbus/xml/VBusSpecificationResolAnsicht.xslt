@@ -37,7 +37,7 @@
 <tr>
 <td>&#160;<xsl:value-of select="name" /> </td>
 <td>&#160;<xsl:value-of select="offset" /> </td>
-<td>&#160;<xsl:value-of select="size" /> </td>
+<td>&#160;<xsl:value-of select="bitSize" /> </td>
 <td>&#160;<xsl:value-of select="mask" /> </td>
 <td>&#160;<xsl:value-of select="factor" /> </td>
 <td>&#160;<xsl:value-of select="unit" /> </td>

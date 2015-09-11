@@ -102,18 +102,25 @@ public class ResolVBUSBinding extends AbstractActiveBinding<ResolVBUSBindingProv
 		// configuration-policy set to require. If set to 'optional' then the configuration may be null
 		// to override the default refresh interval one has to add a 
 		// parameter to openhab.cfg like <bindingName>:refresh=<intervalInMs>
-
+		logger.warn("Konfiguration für Vbus :" + configuration);
 		if (configuration != null) {
 			
 			String refreshIntervalString = (String) configuration.get("refresh");
+			logger.warn("Konfiguration für Vbus refreshIntervalString:" + refreshIntervalString);
 			String serialString = (String) configuration.get("serialport");
+			logger.warn("Konfiguration für Vbus serialString:" + serialString);
+			
 			String hostString = (String) configuration.get("host");
+			logger.warn("Konfiguration für Vbus hostString:" + hostString);
 			String portString = (String) configuration.get("port");
+			logger.warn("Konfiguration für Vbus portString:" + portString);
 			String pwString = (String) configuration.get("password");
+			logger.warn("Konfiguration für Vbus pwString:" + pwString);
 			String updIvalString = (String) configuration.get("updateinterval");
+			logger.warn("Konfiguration für Vbus updIvalString:" + updIvalString);
 			
 			if (StringUtils.isNotBlank(hostString) && (StringUtils.isNotBlank(serialString))) {
-				logger.debug("You cannot define a LAN and a serial/USB interface");
+				logger.warn("You cannot define a LAN and a serial/USB interface");
 				return;
 			}
 			
@@ -143,36 +150,39 @@ public class ResolVBUSBinding extends AbstractActiveBinding<ResolVBUSBindingProv
 				inputMode = INPUT_MODE_SERIAL;
 			}
 		
+			logger.warn("Konfiguration für Vbus inputMode:" + inputMode);
+			
+			logger.debug("Lade XML");
 			loadXMLConfig();
+			logger.debug("XML geladen");
 						
 			// Create LAN oder Serial Receiver the parsed information to the listener
 			switch (inputMode) {
-			
-			case INPUT_MODE_LAN: {
-				packetReceiver = new ResolVBUSLANReceiver(this);
-				// make sure that there is no listener running
-				packetReceiver.stopListener();
-				// if updateInterval is longer than 30 seconds, the execute() method is used
-				if (updateInterval < 30) {
-					logger.debug("Starting ResolVBUS LAN Receiver");
-					packetReceiver.initializeReceiver(host,port,password,updateInterval, true);
+				case INPUT_MODE_LAN: {
+					packetReceiver = new ResolVBUSLANReceiver(this);
+					// make sure that there is no listener running
+					packetReceiver.stopListener();
+					// if updateInterval is longer than 30 seconds, the execute() method is used
+					if (updateInterval < 30) {
+						logger.debug("Starting ResolVBUS LAN Receiver");
+						packetReceiver.initializeReceiver(host,port,password,updateInterval, true);
+						useThread = true;
+					}
+					else {
+						refreshInterval = updateInterval*1000;
+						useThread = false;
+					}
+					break;
+				}
+				case INPUT_MODE_SERIAL: {
+					packetReceiver = new ResolVBUSSerialReceiver(this);
+					// make sure that there is no listener running
+					packetReceiver.stopListener();
+					logger.debug("Starting ResolVBUS Serial Receiver");
+					packetReceiver.initializeReceiver(serialPort,password,updateInterval, true);
 					useThread = true;
+					break;
 				}
-				else {
-					refreshInterval = updateInterval*1000;
-					useThread = false;
-				}
-				break;
-			}
-			case INPUT_MODE_SERIAL: {
-				packetReceiver = new ResolVBUSSerialReceiver(this);
-				// make sure that there is no listener running
-				packetReceiver.stopListener();
-				logger.debug("Starting ResolVBUS Serial Receiver");
-				packetReceiver.initializeReceiver(serialPort,password,updateInterval, true);
-				useThread = true;
-				break;
-			}
 			}
 	
 			// start the listener
@@ -180,6 +190,10 @@ public class ResolVBUSBinding extends AbstractActiveBinding<ResolVBUSBindingProv
 				new Thread(packetReceiver).start();
 			setProperlyConfigured(true);
 		
+		}
+		else
+		{
+			logger.warn("keine Konfiguration für Vbus");
 		}
 	}
 	
@@ -311,7 +325,7 @@ public class ResolVBUSBinding extends AbstractActiveBinding<ResolVBUSBindingProv
 //		}
 		
 		
-		URL entry = FrameworkUtil.getBundle(ResolVBUSConfig.class).getEntry("xml/VBusSpecificationResol_NEW.xml");
+		URL entry = FrameworkUtil.getBundle(ResolVBUSConfig.class).getEntry("xml/VBusSpecificationResol.xml");
 
 		if (entry == null) {
 			config = null;
